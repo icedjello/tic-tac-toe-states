@@ -1,6 +1,7 @@
 // fastest win is 5 moves
 // slowest win is 9 moves
-// X leads
+// X leads.
+// Since the game is symmetrical, you can mirror all X wins & draws to get the Y-lead results.
 
 // win helpers
 
@@ -48,42 +49,43 @@ const getMirroredBoardAsString = (board) => {
 
 const getPlayerSymbol = (turn) => ["X", "Y"][turn % 2];
 
+function makeMove(board, endGames, wins, draws, turn = 0) {
+  if (turn >= 5) {
+    // fastest win is at turn 5
+    const boardAsString = board.join("");
+    if (!endGames[boardAsString] && isWin(board)) {
+      endGames[boardAsString] = turn;
+      endGames[getMirroredBoardAsString(board)] = turn;
+      wins += 1;
+      return;
+    }
+    if (turn === 9 && !endGames[boardAsString]) {
+      // these are draws
+      endGames[boardAsString] = turn;
+      endGames[getMirroredBoardAsString(board)] = turn;
+      draws += 1;
+      return;
+    }
+  }
+  if (turn <= 9) {
+    const mySymbol = getPlayerSymbol(turn);
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === "E") {
+        const nextBoard = [...board];
+        nextBoard[i] = mySymbol;
+        makeMove(nextBoard, turn + 1);
+      }
+    }
+  }
+  return;
+}
+
 const getAllEndGames = () => {
   const endGames = {};
   let wins = 0;
   let draws = 0;
 
-  function makeMove(board, turn = 0) {
-    if (turn >= 5) {
-      // fastest win is at turn 5
-      const boardAsString = board.join("");
-      if (!endGames[boardAsString] && isWin(board)) {
-        endGames[boardAsString] = turn;
-        endGames[getMirroredBoardAsString(board)] = turn;
-        wins += 2;
-        return;
-      }
-      if (turn === 9 && !endGames[boardAsString]) {
-        // these are draws
-        endGames[boardAsString] = turn;
-        endGames[getMirroredBoardAsString(board)] = turn;
-        draws += 2;
-        return;
-      }
-    }
-    if (turn <= 9) {
-      const mySymbol = getPlayerSymbol(turn);
-      for (let i = 0; i < 9; i++) {
-        if (board[i] === "E") {
-          const nextBoard = [...board];
-          nextBoard[i] = mySymbol;
-          makeMove(nextBoard, turn + 1);
-        }
-      }
-    }
-    return;
-  }
-  makeMove(new Array(9).fill("E"));
+  makeMove(new Array(9).fill("E"), endGames, wins, draws);
   return { wins, draws, endGames };
 };
 
